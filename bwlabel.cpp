@@ -158,7 +158,7 @@ cv::Mat bwlabel(cv::Mat in, int & num, int mode)
 	fill_run_vectors(in, sc, ec, r);
 	first_pass(sc, ec, r, labels, num_runs, mode);
 	cv::Mat result = cv::Mat::zeros(in.size(), CV_8UC1);
-	int num = 0;
+	num = 0;
 	for(int i = 0; i < num_runs; i++)
 	{
 		uchar * p_row = result.ptr<uchar>(r[i]);
