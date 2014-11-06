@@ -3,12 +3,212 @@
 #include "feature.h"
 #include "classify_tools.h"
 #include <tbb/task_group.h>
+#define CNN_USE_TBB
+#include <tiny_cnn/tiny_cnn.h>
+#include <boost/timer.hpp>
+#include <boost/progress.hpp>
+using namespace tiny_cnn;
+using namespace tiny_cnn::activation;
 
 extern void load_image_blocks_from_path(const char * positive_path, const char * negative_path,
 								 std::vector<cv::Mat> &images, std::vector<int> &labels,
 								 int pos_label, int neg_label);
 
+int svm_test();
+void mlp_test();
+void mlp_train(const char * positive_path, const char * negetive_path, const char * weight_file, p_func_feature_extract func);
+void train_test_split(std::vector<cv::Mat> & images, std::vector<int> & labels, 
+					  std::vector<cv::Mat> & train_images, std::vector<int> & train_labels,
+					  std::vector<cv::Mat> & test_images, std::vector<int> & test_labels, double test_size)
+{
+	assert(images.size() == labels.size());
+	int length = labels.size();
+	int test_length = length * test_size;
+	int train_length = length - test_length;
+	train_images.resize(train_length);
+	train_labels.resize(train_length);
+	test_images.resize(test_length);
+	test_labels.resize(test_length);
+	srand(clock());
+	int r1,r2;
+	for(int i = 0; i < length / 2; i++)
+	{
+		r1 = rand() % length;
+		r2 = rand() % length;
+		auto tmp1 = images[r1];
+		images[r1] = images[r2];
+		images[r2] = tmp1;
+		auto tmp2 = labels[r1];
+		labels[r1] = labels[r2];
+		labels[r2] = tmp2;
+	}
+	auto iti = images.begin();
+	auto itl = labels.begin();
+	std::copy(iti, iti+train_length, train_images.begin());
+	std::copy(iti+train_length, images.end(), test_images.begin());
+	std::copy(itl, itl+train_length, train_labels.begin());
+	std::copy(itl+train_length, labels.end(), test_labels.begin());
+}
 int main()
+{
+	//mlp_test();
+	mlp_train("F:\\DataSet\\smoke\\image\\my24\\smoke","F:\\DataSet\\smoke\\image\\my24\\nonsmoke","ulbp-weights",get_u_lbp_gray);
+	std::cout<<"complete press any key out"<<std::endl;
+	getchar();
+}
+
+void mlp_train(const char * positive_path, const char * negetive_path, const char * weight_file, p_func_feature_extract func)
+{
+	std::ofstream ofs(weight_file);
+	std::vector<cv::Mat> images;
+	std::vector<int> labels;
+	load_image_blocks_from_path(positive_path, negetive_path, images, labels, 1, 0);
+	auto feats = get_features_from_images(images, func);
+	const int num_input = feats[0].size();
+	const int num_hidden_units = 30;
+	//int num_units[] = { num_input, num_hidden_units, 2 };
+	//auto nn = make_mlp<mse, gradient_descent_levenberg_marquardt, tan_h>(num_units, num_units + 3);
+	typedef network<mse, gradient_descent_levenberg_marquardt> net_t;
+	net_t nn;
+	auto F1 = fully_connected_layer<net_t, tan_h>(num_input, num_hidden_units);
+	auto F2 = fully_connected_layer<net_t, tan_h>(num_hidden_units, 2);
+	nn.add(&F1);
+	nn.add(&F2);
+
+		//train mlp
+		boost::timer t;
+		nn.optimizer().alpha = 0.005;
+		boost::progress_display disp(feats.size());
+		// create callback
+		auto on_enumerate_epoch = [&](){
+			std::cout << t.elapsed() << "s elapsed." << std::endl;
+			tiny_cnn::result res = nn.test(feats, labels);
+			std::cout << nn.optimizer().alpha << "," << res.num_success << "/" << res.num_total << std::endl;
+			nn.optimizer().alpha *= 0.85; // decay learning rate
+			nn.optimizer().alpha = std::max(0.00001, nn.optimizer().alpha);
+			disp.restart(feats.size());
+			t.restart();
+		};
+		auto on_enumerate_data = [&](){ 
+			++disp; 
+		};  
+
+		nn.train(feats, labels, 1, 30, on_enumerate_data, on_enumerate_epoch);
+		nn.test(feats, labels).print_detail(std::cout);
+		ofs << F1 <<F2<<std::cout;
+		ofs.close();
+}
+void mlp_test()
+{
+	//extract functions define
+	p_func_feature_extract funcs[] = {get_lbp_gray, get_u_lbp_gray, get_bgc1_gray, get_bgc2_gray, get_bgc3_gray,
+		get_rt_gray, get_rtu_gray, get_ilbp_gray, get_3dlbp_gray,get_mbp_gray, get_dlbp_gray, get_idlbp_gray,
+		get_glbp_gray, get_mts_gray, get_eoh_gray};
+	const char * func_names[] = {"get_lbp_gray","get_u_lbp_gray", "get_bgc1_gray", "get_bgc2_gray", "get_bgc3_gray",
+		"get_rt_gray", "get_rtu_gray", "get_ilbp_gray", "get_3dlbp_gray", "get_mbp_gray", "get_dlbp_gray", "get_idlbp_gray",
+		"get_glbp_gray", "get_mts_gray", "get_eoh_gray"};
+	p_func_feature_extract_with_delta funcs2[] = {get_sts_gray,get_cslbp_gray,get_cbp_gray,get_csts_gray,get_ltp_gray,get_iltp_gray};
+	const char * func_names2[] = {"get_sts_gray","get_cslbp_gray","get_cbp_gray","get_csts_gray","get_ltp_gray","get_iltp_gray"};
+	//load dataset
+	//std::vector<cv::Mat> images;
+	//std::vector<int> labels;
+	std::vector<cv::Mat> train_images;
+	std::vector<cv::Mat> test_images;
+	std::vector<int> train_labels;
+	std::vector<int> test_labels;
+	boost::timer t;
+	load_image_blocks_from_path("F:\\DataSet\\smoke\\image\\my24\\smoke", "F:\\DataSet\\smoke\\image\\my24\\nonsmoke", train_images, train_labels, 1, 0);
+	load_image_blocks_from_path("F:\\DataSet\\smoke\\image\\my24\\smoke", "F:\\DataSet\\smoke\\image\\my24\\nonsmoke", test_images, test_labels, 1, 0);
+	std::cout<<"load dataset complete! use time : "<<t.elapsed()<<"s"<<std::endl;
+	std::ofstream ofs("my24-mlp-yuan-result.txt");
+
+	//split dataset
+	/*
+	std::vector<cv::Mat> train_images;
+	std::vector<cv::Mat> test_images;
+	std::vector<int> train_labels;
+	std::vector<int> test_labels;
+	train_test_split(images, labels, train_images, train_labels, test_images, test_labels, 0.5);
+	*/
+	for(auto func : funcs)
+	{
+		static int idx = 0;
+		//feature extract
+		auto train_feats = get_features_from_images(train_images, func);
+		auto test_feats = get_features_from_images(test_images, func);
+
+		//construct mlp
+		const int num_input = train_feats[0].size();
+		const int num_hidden_units = 30;
+		int num_units[] = { num_input, num_hidden_units, 2 };
+		auto nn = make_mlp<mse, gradient_descent_levenberg_marquardt, tan_h>(num_units, num_units + 3);
+
+		//train mlp
+		nn.optimizer().alpha = 0.005;
+		 boost::progress_display disp(train_feats.size());
+		t.restart();
+		// create callback
+		auto on_enumerate_epoch = [&](){
+			std::cout << t.elapsed() << "s elapsed." << std::endl;
+			tiny_cnn::result res = nn.test(test_feats, test_labels);
+			std::cout << nn.optimizer().alpha << "," << res.num_success << "/" << res.num_total << std::endl;
+			nn.optimizer().alpha *= 0.85; // decay learning rate
+			nn.optimizer().alpha = std::max(0.00001, nn.optimizer().alpha);
+			disp.restart(train_feats.size());
+			t.restart();
+		};
+		auto on_enumerate_data = [&](){ 
+			++disp; 
+		};  
+
+		nn.train(train_feats, train_labels, 1, 20, on_enumerate_data, on_enumerate_epoch);
+		std::cout<<func_names[idx]<<std::endl;
+		nn.test(test_feats, test_labels).print_detail(std::cout);
+		ofs<<func_names[idx]<<std::endl;
+		nn.test(test_feats, test_labels).print_detail(ofs);
+		idx++;
+	}
+	for(auto func : funcs2)
+	{
+		static int idx = 0;
+		//feature extract
+		auto train_feats = get_features_from_images(train_images, func, 10);
+		auto test_feats = get_features_from_images(test_images, func, 10);
+
+		//construct mlp
+		const int num_input = train_feats[0].size();
+		const int num_hidden_units = 30;
+		int num_units[] = { num_input, num_hidden_units, 2 };
+		auto nn = make_mlp<mse, gradient_descent_levenberg_marquardt, tan_h>(num_units, num_units + 3);
+
+		//train mlp
+		nn.optimizer().alpha = 0.005;
+		 boost::progress_display disp(train_feats.size());
+		t.restart();
+		// create callback
+		auto on_enumerate_epoch = [&](){
+			std::cout << t.elapsed() << "s elapsed." << std::endl;
+			tiny_cnn::result res = nn.test(test_feats, test_labels);
+			std::cout << nn.optimizer().alpha << "," << res.num_success << "/" << res.num_total << std::endl;
+			nn.optimizer().alpha *= 0.85; // decay learning rate
+			nn.optimizer().alpha = std::max(0.00001, nn.optimizer().alpha);
+			disp.restart(train_feats.size());
+			t.restart();
+		};
+		auto on_enumerate_data = [&](){ 
+			++disp; 
+		};  
+
+		nn.train(train_feats, train_labels, 1, 30, on_enumerate_data, on_enumerate_epoch);
+		std::cout<<func_names2[idx]<<std::endl;
+		nn.test(test_feats, test_labels).print_detail(std::cout);
+		ofs<<func_names2[idx]<<std::endl;
+		nn.test(test_feats, test_labels).print_detail(ofs);
+		idx++;
+	}
+	ofs.close();
+}
+int svm_test()
 {
 	std::vector<cv::Mat> images;
 	std::vector<int> labels;
@@ -223,7 +423,6 @@ int main()
 	t = clock() - t;
 	std::cout<<"all time: "<<t/CLOCKS_PER_SEC<<std::endl;
 	std::cout<<"press any key"<<std::endl;
-	getchar();
-
+	
 	return 0;
 }
