@@ -72,3 +72,35 @@ void load_image_blocks_from_path(const char * positive_path, const char * negati
 	}
 }
 
+void train_test_split(std::vector<cv::Mat> & images, std::vector<int> & labels, 
+					  std::vector<cv::Mat> & train_images, std::vector<int> & train_labels,
+					  std::vector<cv::Mat> & test_images, std::vector<int> & test_labels, double test_size)
+{
+	assert(images.size() == labels.size());
+	int length = labels.size();
+	int test_length = length * test_size;
+	int train_length = length - test_length;
+	train_images.resize(train_length);
+	train_labels.resize(train_length);
+	test_images.resize(test_length);
+	test_labels.resize(test_length);
+	srand(clock());
+	int r1,r2;
+	for(int i = 0; i < length / 2; i++)
+	{
+		r1 = rand() % length;
+		r2 = rand() % length;
+		auto tmp1 = images[r1];
+		images[r1] = images[r2];
+		images[r2] = tmp1;
+		auto tmp2 = labels[r1];
+		labels[r1] = labels[r2];
+		labels[r2] = tmp2;
+	}
+	auto iti = images.begin();
+	auto itl = labels.begin();
+	std::copy(iti, iti+train_length, train_images.begin());
+	std::copy(iti+train_length, images.end(), test_images.begin());
+	std::copy(itl, itl+train_length, train_labels.begin());
+	std::copy(itl+train_length, labels.end(), test_labels.begin());
+}
