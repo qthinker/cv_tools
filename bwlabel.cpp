@@ -1,13 +1,13 @@
 #include "bwlabel.h"
 
-inline int number_of_runs(cv::Mat in)
+int number_of_runs(const cv::Mat in)
 {
 	const int rows = in.rows;
 	const int cols = in.cols;
 	int result = 0;
 	for(int row = 0; row < rows; row++)
 	{
-		uchar * p_row = in.ptr<uchar>(row);
+		const uchar * p_row = in.ptr<uchar>(row);
 		if(p_row[0] != 0)
 			result++;
 		for(int col = 1; col < cols; col++)
@@ -18,14 +18,14 @@ inline int number_of_runs(cv::Mat in)
 	}
 	return result;
 }
-inline void fill_run_vectors(cv::Mat in, int sc[], int ec[], int r[])
+void fill_run_vectors(const cv::Mat in, int sc[], int ec[], int r[])
 {
 	const int rows = in.rows;
 	const int cols = in.cols;
 	int idx = 0;
 	for(int row = 0; row < rows; row++)
 	{
-		uchar * p_row = in.ptr<uchar>(row);
+		const uchar * p_row = in.ptr<uchar>(row);
 		int prev = 0;
 		for(int col = 0; col < cols; col++)
 		{
@@ -50,7 +50,7 @@ inline void fill_run_vectors(cv::Mat in, int sc[], int ec[], int r[])
 		}
 	}
 }
-inline void first_pass(int sc[], int ec[], int r[],int labels[], int num_runs, int mode)
+void first_pass(const int sc[], const int ec[], const int r[],int labels[], const int num_runs, const int mode)
 {
 	int cur_row = 0;
 	int next_label = 1;
@@ -147,9 +147,9 @@ inline void first_pass(int sc[], int ec[], int r[],int labels[], int num_runs, i
 	delete [] non_labels;
 }
 
-cv::Mat bwlabel(cv::Mat in, int & num, int mode)
+cv::Mat bwlabel(const cv::Mat in, int * num, const int mode)
 {
-	int num_runs = number_of_runs(in);
+	const int num_runs = number_of_runs(in);
 	int * sc = new int[num_runs];
 	int * ec = new int[num_runs];
 	int * r = new int[num_runs];
@@ -158,14 +158,21 @@ cv::Mat bwlabel(cv::Mat in, int & num, int mode)
 	fill_run_vectors(in, sc, ec, r);
 	first_pass(sc, ec, r, labels, num_runs, mode);
 	cv::Mat result = cv::Mat::zeros(in.size(), CV_8UC1);
-	num = 0;
+
+	int number = 0;
 	for(int i = 0; i < num_runs; i++)
 	{
 		uchar * p_row = result.ptr<uchar>(r[i]);
 		for(int j = sc[i]; j <= ec[i]; j++)
 			p_row[j] = labels[i];
-		if(num < labels[i])
-			num = labels[i];
+		if(number < labels[i])
+			number = labels[i];
 	}
+	if(num != NULL)
+		*num = number;
+	delete [] sc;
+	delete [] ec;
+	delete [] r;
+	delete [] labels;
 	return result;
 }
