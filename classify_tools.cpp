@@ -6,7 +6,7 @@
 #include <boost/progress.hpp>
 
 
-std::vector<feature_t> get_features_from_images(std::vector<cv::Mat> &images, const p_func_feature_extract func)
+std::vector<feature_t> get_features_from_images(const std::vector<cv::Mat> &images, const p_static_feature_function func)
 {
 	std::vector<feature_t> result;
 	for(auto img : images)
@@ -16,7 +16,7 @@ std::vector<feature_t> get_features_from_images(std::vector<cv::Mat> &images, co
 	return result;
 }
 
-std::vector<feature_t> get_features_from_images(std::vector<cv::Mat> &images, const p_func_feature_extract_with_delta func, int delta)
+std::vector<feature_t> get_features_from_images(const std::vector<cv::Mat> &images, const p_static_feature_function_with_delta func, const int delta)
 {
 	std::vector<feature_t> result;
 	for(auto img : images)
@@ -26,7 +26,7 @@ std::vector<feature_t> get_features_from_images(std::vector<cv::Mat> &images, co
 	return result;
 }
 
-svm_problem * svm_fill_problem(std::vector<feature_t> feats, std::vector<int> labels)
+svm_problem * svm_fill_problem(const std::vector<feature_t> &feats, const std::vector<int> &labels)
 {
 	assert(feats.size() == labels.size());
 	int length = labels.size();
@@ -69,7 +69,7 @@ void svm_free_problem(svm_problem *prob)
 	free(prob->x);
 	free(prob);
 }
-svm_parameter * svm_fill_parameter(double gamma, int C)
+svm_parameter * svm_fill_parameter(const double gamma, const int C)
 {
 	svm_parameter * param = (svm_parameter *)malloc(sizeof(svm_parameter));
 	param->svm_type = C_SVC;
@@ -90,7 +90,7 @@ svm_parameter * svm_fill_parameter(double gamma, int C)
 	return param;
 }
 
-double svm_test_acc(svm_problem * prob, svm_model * model)
+double svm_test_acc(const svm_problem * prob, const svm_model * model)
 {
 	double success = 0;
 	for(int i = 0; i < prob->l; i++)
@@ -103,13 +103,12 @@ double svm_test_acc(svm_problem * prob, svm_model * model)
 	return success;
 }
 
-void svm_train_and_test(std::vector<feature_t> feats, std::vector<int> labels, const char * model_file, std::ofstream &ofs)
+void svm_train_and_test(const std::vector<feature_t> &feats, const std::vector<int> &labels, const char * model_file, std::ofstream &ofs)
 {
 	svm_model * model;
 	if(_access(model_file, 0) == -1)
 	{
-		auto gamma = 1.0 / feats[0].size();
-		auto param = svm_fill_parameter(gamma);
+		auto param = svm_fill_parameter();
 		auto prob = svm_fill_problem(feats, labels);
 		model = svm_train(prob, param);
 		svm_save_model(model_file, model);
@@ -130,7 +129,7 @@ void svm_train_and_test(std::vector<feature_t> feats, std::vector<int> labels, c
 	svm_free_and_destroy_model(&model);
 }
 
-void svm_train_and_test(std::vector<feature_t> feats, std::vector<int> labels, const char * model_file)
+void svm_train_and_test(const std::vector<feature_t> &feats, const std::vector<int> &labels, const char * model_file)
 {
 	svm_model * model;
 	if(_access(model_file, 0) == -1)
@@ -155,24 +154,22 @@ void svm_train_and_test(std::vector<feature_t> feats, std::vector<int> labels, c
 	svm_free_and_destroy_model(&model);
 }
 //
-double svm_train_and_test(std::vector<feature_t> train_feats, std::vector<int> train_labels,std::vector<feature_t> test_feats, std::vector<int> test_labels, const char * model_file)
+double svm_train_and_test(const std::vector<feature_t> &train_feats, const std::vector<int> &train_labels, const std::vector<feature_t> &test_feats, const std::vector<int> &test_labels, const char * model_file)
 {
 	svm_model * model;
-	auto gamma = 1.0 / train_feats[0].size();
-	auto param = svm_fill_parameter(gamma, 100);
+	auto param = svm_fill_parameter();
 	auto prob = svm_fill_problem(train_feats, train_labels);
 	model = svm_train(prob, param);
-	//svm_save_model(model_file, model);
+	svm_save_model(model_file, model);
 	auto acc = svm_test_acc(test_feats, test_labels, model);
 	svm_destroy_param(param);
 	svm_free_problem(prob);
 	//free
 	svm_free_and_destroy_model(&model);
-	std::cout<<model_file<<"  acc: "<<acc*100<<std::endl;
 	return acc;
 }
 
-double svm_test_acc(std::vector<feature_t> feats, std::vector<int> labels, svm_model * model)
+double svm_test_acc(const std::vector<feature_t> &feats, const std::vector<int> &labels, const svm_model * model)
 {
 	double success = 0;
 	assert(feats.size() == labels.size());
@@ -201,67 +198,4 @@ double svm_test_acc(std::vector<feature_t> feats, std::vector<int> labels, svm_m
 		free(x);
 	}
 	return success / length;
-}
-
-tiny_cnn::result mlp_test(const char * positive_path, const char * negetive_path, const char * weight_file, p_func_feature_extract func)
-{
-	std::ifstream ifs(weight_file);
-	std::vector<cv::Mat> images;
-	std::vector<int> labels;
-	load_image_blocks_from_path(positive_path, negetive_path, images, labels, 1, 0);
-	auto feats = get_features_from_images(images, func);
-	const int num_input = feats[0].size();
-	const int num_hidden_units = 30;
-	typedef network<mse, gradient_descent_levenberg_marquardt> net_t;
-	net_t nn;
-	auto F1 = fully_connected_layer<net_t, tan_h>(num_input, num_hidden_units);
-	auto F2 = fully_connected_layer<net_t, tan_h>(num_hidden_units, 2);
-	ifs >> F1 >> F2;
-	ifs.close();
-	nn.add(&F1);
-	nn.add(&F2);
-	tiny_cnn::result res = nn.test(feats, labels);
-	return res;
-}
-void mlp_train(const char * positive_path, const char * negetive_path, const char * weight_file, p_func_feature_extract func)
-{
-	std::ofstream ofs(weight_file);
-	std::vector<cv::Mat> images;
-	std::vector<int> labels;
-	load_image_blocks_from_path(positive_path, negetive_path, images, labels, 1, 0);
-	assert(images.size() != 0 && images.size() == labels.size());
-	auto feats = get_features_from_images(images, func);
-	const int num_input = feats[0].size();
-	const int num_hidden_units = 30;
-	//int num_units[] = { num_input, num_hidden_units, 2 };
-	//auto nn = make_mlp<mse, gradient_descent_levenberg_marquardt, tan_h>(num_units, num_units + 3);
-	typedef network<mse, gradient_descent_levenberg_marquardt> net_t;
-	net_t nn;
-	auto F1 = fully_connected_layer<net_t, tan_h>(num_input, num_hidden_units);
-	auto F2 = fully_connected_layer<net_t, tan_h>(num_hidden_units, 2);
-	nn.add(&F1);
-	nn.add(&F2);
-
-		//train mlp
-		boost::timer t;
-		nn.optimizer().alpha = 0.005;
-		boost::progress_display disp(feats.size());
-		// create callback
-		auto on_enumerate_epoch = [&](){
-			std::cout << t.elapsed() << "s elapsed." << std::endl;
-			tiny_cnn::result res = nn.test(feats, labels);
-			std::cout << nn.optimizer().alpha << "," << res.num_success << "/" << res.num_total << std::endl;
-			nn.optimizer().alpha *= 0.85; // decay learning rate
-			nn.optimizer().alpha = std::max(0.00001, nn.optimizer().alpha);
-			disp.restart(feats.size());
-			t.restart();
-		};
-		auto on_enumerate_data = [&](){ 
-			++disp; 
-		};  
-
-		nn.train(feats, labels, 1, 30, on_enumerate_data, on_enumerate_epoch);
-		nn.test(feats, labels).print_detail(std::cout);
-		ofs << F1 <<F2<<std::cout;
-		ofs.close();
 }
