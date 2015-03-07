@@ -4,8 +4,8 @@
 feature_t get_u_lbp_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t array_lbp;
 	array_lbp.resize(59, 0);
 	double norm = 0;
@@ -65,8 +65,8 @@ feature_t get_u_lbp_gray(const cv::Mat & img)
 feature_t get_riu_lbp_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t array_lbp;
 	array_lbp.resize(10, 0);
 	double norm = 0;
@@ -125,8 +125,8 @@ feature_t get_riu_lbp_gray(const cv::Mat & img)
 feature_t get_ri_lbp_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t array_lbp;
 	array_lbp.resize(36, 0);
 	double norm = 0;
@@ -186,8 +186,8 @@ feature_t get_ri_lbp_gray(const cv::Mat & img)
 feature_t get_u_lbp_color(const cv::Mat & img)
 {
 	assert(img.channels() == 3);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t array_lbp;
 	array_lbp.resize(177, 0);
 	cv::Mat bgr[3];
@@ -251,8 +251,8 @@ feature_t get_u_lbp_color(const cv::Mat & img)
 feature_t get_lbp_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t result;
 	result.resize(256, 0);
 	int value, center;
@@ -299,8 +299,8 @@ feature_t get_lbp_gray(const cv::Mat & img)
 feature_t get_u_lbpv_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t array_lbpv;
 	array_lbpv.resize(59, 0);
 	double norm = 0;
@@ -370,8 +370,8 @@ feature_t get_u_lbpv_gray(const cv::Mat & img)
 feature_t get_ri_lbpv_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t array_lbpv;
 	array_lbpv.resize(36, 0);
 	double norm = 0;
@@ -442,8 +442,8 @@ feature_t get_ri_lbpv_gray(const cv::Mat & img)
 feature_t get_riu_lbpv_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t array_lbpv;
 	array_lbpv.resize(10, 0);
 	double norm = 0;
@@ -513,8 +513,8 @@ feature_t get_riu_lbpv_gray(const cv::Mat & img)
 feature_t get_bgc1_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t result;
 	result.resize(255, 0);
 	int value = 0;
@@ -562,8 +562,8 @@ feature_t get_bgc1_gray(const cv::Mat & img)
 feature_t get_bgc2_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t result;
 	result.resize(225, 0);
 	int value = 0;
@@ -612,8 +612,8 @@ feature_t get_bgc2_gray(const cv::Mat & img)
 feature_t get_bgc3_gray(const cv::Mat & img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	feature_t result;
 	result.resize(255, 0);
 	int value;
@@ -660,8 +660,8 @@ feature_t get_bgc3_gray(const cv::Mat & img)
 feature_t get_eoh_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int Orientation[8] = {0};
 	int Magnitudes[8] = {0};
 	cv::Mat H, V, M;
@@ -721,8 +721,8 @@ feature_t get_eoh_gray(const cv::Mat &img)
 feature_t get_gld_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int center, i4, i5, i6, i7;
 	int value;
 	double norm = 0;
@@ -759,8 +759,8 @@ feature_t get_gld_gray(const cv::Mat &img)
 feature_t get_sts_gray(const cv::Mat &img, int delta)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int center, a[4], s;
 	int value;
 	double norm = 0;
@@ -809,8 +809,8 @@ feature_t get_sts_gray(const cv::Mat &img, int delta)
 feature_t get_rt_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int center, value;
 	double norm = 0;
 	feature_t result;
@@ -859,8 +859,8 @@ feature_t get_rt_gray(const cv::Mat &img)
 feature_t get_rtu_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int center, value;
 	double norm = 0;
 	feature_t result;
@@ -927,8 +927,8 @@ feature_t get_rtu_gray(const cv::Mat &img)
 feature_t get_ilbp_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int mean, value;
 	double norm = 0;
 	feature_t result;
@@ -979,8 +979,8 @@ feature_t get_ilbp_gray(const cv::Mat &img)
 feature_t get_3dlbp_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int center, value;
 	double norm = 0;
 	feature_t result;
@@ -1037,8 +1037,8 @@ feature_t get_3dlbp_gray(const cv::Mat &img)
 feature_t get_cslbp_gray(const cv::Mat &img, int delta)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int value;
 	double norm = 0;
 	feature_t result;
@@ -1084,8 +1084,8 @@ feature_t get_cslbp_gray(const cv::Mat &img, int delta)
 feature_t get_mbp_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int mid, value;
 	double norm = 0;
 	feature_t result;
@@ -1134,8 +1134,8 @@ feature_t get_mbp_gray(const cv::Mat &img)
 feature_t get_dlbp_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int center, value;
 	double norm = 0;
 	feature_t result;
@@ -1182,8 +1182,8 @@ feature_t get_dlbp_gray(const cv::Mat &img)
 feature_t get_idlbp_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int mean, value;
 	double norm = 0;
 	feature_t result;
@@ -1233,8 +1233,8 @@ feature_t get_idlbp_gray(const cv::Mat &img)
 feature_t get_cbp_gray(const cv::Mat &img, int delta)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int mean, value;
 	double norm = 0;
 	feature_t result;
@@ -1286,8 +1286,8 @@ feature_t get_cbp_gray(const cv::Mat &img, int delta)
 feature_t get_glbp_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int mean, center, value;
 	double norm = 0;
 	feature_t result;
@@ -1336,8 +1336,8 @@ feature_t get_glbp_gray(const cv::Mat &img)
 feature_t get_csts_gray(const cv::Mat &img, int delta)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int value;
 	double norm = 0;
 	feature_t result;
@@ -1390,8 +1390,8 @@ feature_t get_csts_gray(const cv::Mat &img, int delta)
 feature_t get_mts_gray(const cv::Mat &img)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int center, value;
 	double norm = 0;
 	feature_t result;
@@ -1434,8 +1434,8 @@ feature_t get_mts_gray(const cv::Mat &img)
 feature_t get_ltp_gray(const cv::Mat &img, int delta)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int center, value1, value2;
 	double norm = 0;
 	feature_t result;
@@ -1487,8 +1487,8 @@ feature_t get_ltp_gray(const cv::Mat &img, int delta)
 feature_t get_iltp_gray(const cv::Mat &img, int delta)
 {
 	assert(img.dims == 2);
-	int rows = img.rows;
-	int cols = img.cols;
+	const int rows = img.rows;
+	const int cols = img.cols;
 	int mean, value1, value2;
 	double norm = 0;
 	feature_t result;
